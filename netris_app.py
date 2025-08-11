@@ -1,13 +1,13 @@
 import math
 from dataclasses import dataclass
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Union
 
 import streamlit as st
 
 st.set_page_config(page_title="Конфигуратор видеосервера (упрощённое ТЗ)", layout="wide")
 
 # ----------------------------
-# Константы из упрощённого ТЗ (ваше сообщение)
+# Константы из упрощённого ТЗ
 # ----------------------------
 
 @dataclass
@@ -70,7 +70,7 @@ def usable_and_level(n: int, disk_tb: float) -> Tuple[float, str]:
     return (n - 4) * disk_tb, f"RAID60 (2 группы RAID6, всего {n} дисков)"
 
 
-def plan_storage(required_effective_tb: float, disk_tb: float) -> Dict[str, float | int | str]:
+def plan_storage(required_effective_tb: float, disk_tb: float) -> Dict[str, Union[float, int, str]]:
     """Подбираем минимальное число базовых дисков (без hot-spare),
     чтобы полезная ёмкость ≥ требуемой. Для n>16 добавляются hot-spare: 1 на каждые 18 дисков."""
     best = None
@@ -210,14 +210,14 @@ st.download_button(
 )
 import math
 from dataclasses import dataclass
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Union
 
 import streamlit as st
 
 st.set_page_config(page_title="Конфигуратор видеосервера (упрощённое ТЗ)", layout="wide")
 
 # ----------------------------
-# Константы из упрощённого ТЗ (ваше сообщение)
+# Константы из упрощённого ТЗ
 # ----------------------------
 
 @dataclass
@@ -280,7 +280,7 @@ def usable_and_level(n: int, disk_tb: float) -> Tuple[float, str]:
     return (n - 4) * disk_tb, f"RAID60 (2 группы RAID6, всего {n} дисков)"
 
 
-def plan_storage(required_effective_tb: float, disk_tb: float) -> Dict[str, float | int | str]:
+def plan_storage(required_effective_tb: float, disk_tb: float) -> Dict[str, Union[float, int, str]]:
     """Подбираем минимальное число базовых дисков (без hot-spare),
     чтобы полезная ёмкость ≥ требуемой. Для n>16 добавляются hot-spare: 1 на каждые 18 дисков."""
     best = None
