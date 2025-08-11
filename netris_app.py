@@ -69,8 +69,15 @@ def usable_and_level(n: int, disk_tb: float) -> Tuple[float, str]:
     if 7 <= n <= 16:
         return (n - 2) * disk_tb, f"RAID6 ({n} дисков)"
 
-    # >16: две группы RAID6 в RAID0 (RAID60). Суммарные накладные расходы = 4 диска.
-    return (n - 4) * disk_tb, f"RAID60 (2 группы RAID6, всего {n} дисков)"
+    # >16: две группы RAID6 в RAID0 (RAID60). Разбиваем массив на две максимально равные группы.
+    g1 = math.ceil(n / 2)
+    g2 = n - g1
+    # Страхуемся: обе группы должны быть валидными для RAID6 (минимум 4 диска на группу)
+    if g2 < 4:
+        g2 = 4
+        g1 = n - g2
+    usable = max(g1 - 2, 0) + max(g2 - 2, 0)
+    return usable * disk_tb, f"RAID60 (RAID6 {g1} дисков, RAID6 {g2} дисков)"
 
 
 def plan_storage(required_effective_tb: float, disk_tb: float, fill_factor: float) -> Dict[str, Union[float, int, str]]:
