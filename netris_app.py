@@ -33,6 +33,8 @@ OS_NAME = "РЕД ОС"
 
 # Архив: 1,4 ТБ на 1 камеру (фиксировано)
 ARCHIVE_TB_PER_CAMERA = 1.4
+# Коэффициент заполнения массива (используем не более этого значения)
+FILL_FACTOR = 0.77
 
 # ----------------------------
 # Вспомогательные функции
@@ -70,13 +72,14 @@ def usable_and_level(n: int, disk_tb: float) -> Tuple[float, str]:
     return (n - 4) * disk_tb, f"RAID60 (2 группы RAID6, всего {n} дисков)"
 
 
-def plan_storage(required_effective_tb: float, disk_tb: float) -> Dict[str, Union[float, int, str]]:
+def plan_storage(required_effective_tb: float, disk_tb: float, fill_factor: float) -> Dict[str, Union[float, int, str]]:
     """Подбираем минимальное число базовых дисков (без hot-spare),
     чтобы полезная ёмкость ≥ требуемой. Для n>16 добавляются hot-spare: 1 на каждые 18 дисков."""
     best = None
+    required_usable_tb = required_effective_tb / fill_factor
     for n in range(2, 240):
         usable_tb, level = usable_and_level(n, disk_tb)
-        if usable_tb >= required_effective_tb:
+        if usable_tb >= required_usable_tb:
             spares = math.ceil(n / 18) if n > 16 else 0
             total = n + spares
             best = {
@@ -85,7 +88,7 @@ def plan_storage(required_effective_tb: float, disk_tb: float) -> Dict[str, Unio
                 "total_disks": total,
                 "raid": level,
                 "usable_tb": usable_tb,
-                "required_tb": required_effective_tb,
+                "required_usable_tb": required_usable_tb,
                 "raw_tb": total * disk_tb,
             }
             break
@@ -97,7 +100,7 @@ def plan_storage(required_effective_tb: float, disk_tb: float) -> Dict[str, Unio
             "total_disks": 0,
             "raid": "Невозможно подобрать (увеличьте размер диска)",
             "usable_tb": 0.0,
-            "required_tb": required_effective_tb,
+            "required_usable_tb": required_usable_tb,
             "raw_tb": 0.0,
         }
 
@@ -121,7 +124,7 @@ with st.sidebar:
 # Расчёты
 archive_effective_tb = cams * ARCHIVE_TB_PER_CAMERA
 chosen = pick_tier(cams)
-plan = plan_storage(archive_effective_tb, disk_tb)
+plan = plan_storage(archive_effective_tb, disk_tb, FILL_FACTOR)
 
 # Вывод
 st.subheader("Итоговая конфигурация")
@@ -143,7 +146,11 @@ with col2:
 
 Камер: {cams}
 
-Итого требуемо: {archive_effective_tb:.2f} ТБ""")
+Итого требуемо: {archive_effective_tb:.2f} ТБ
+
+Коэффициент заполнения массива (не более): {FILL_FACTOR:.2f}
+
+Требуемая полезная ёмкость с учётом коэффициента: {archive_effective_tb / FILL_FACTOR:.2f} ТБ""")
 
 with col3:
     st.markdown("**Дисковый массив (под архив)**")
@@ -159,7 +166,7 @@ Hot‑spare (для >16 дисков, 1 на 18): {plan['spares']}
 
 Полезная ёмкость: {plan['usable_tb']:.2f} ТБ
 
-Требуемая ёмкость: {plan['required_tb']:.2f} ТБ
+Требуемая полезная ёмкость (с учётом коэффициента): {plan['required_usable_tb']:.2f} ТБ
 
 Суммарная RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
 
@@ -175,6 +182,8 @@ result = {
     "cameras": cams,
     "archive_tb_per_camera": ARCHIVE_TB_PER_CAMERA,
     "required_archive_tb": archive_effective_tb,
+    "required_usable_tb": archive_effective_tb / FILL_FACTOR,
+    "fill_factor": FILL_FACTOR,
     "disk_tb": disk_tb,
     "server": {"cpu": chosen.cores_label, "ram_gb": chosen.ram_gb, "os": OS_NAME, "os_storage": OS_STORAGE_STR},
     "storage_plan": plan,
