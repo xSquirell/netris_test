@@ -66,7 +66,7 @@ def usable_and_level(n: int, disk_tb: float) -> Tuple[float, str]:
     if 3 <= n <= 6:
         return (n - 1) * disk_tb, f"RAID5 ({n} диска)"
     if 7 <= n <= 16:
-        return (n - 2) * disk_tb, f"RAID6 ({n} дисков) или 2×RAID5 в RAID0"
+        return (n - 2) * disk_tb, f"RAID6 ({n} дисков)"
 
     # >16: две группы RAID6 в RAID0 (RAID60). Суммарные накладные расходы = 4 диска.
     return (n - 4) * disk_tb, f"RAID60 (2 группы RAID6, всего {n} дисков)"
@@ -173,7 +173,6 @@ Hot‑spare (для >16 дисков, 1 на 18): {plan['spares']}
 st.divider()
 
 st.caption("""Правила подбора CPU/RAM, подсистемы ОС и массива под архив жёстко соответствуют упрощённому ТЗ из чата.
-Для диапазона 7–16 дисков ёмкость RAID6 и 2×RAID5 в RAID0 одинаковая ((n−2)×диск), выбрана нейтральная подача.
 Для >16 дисков используется RAID60 (две группы RAID6) и добавляются hot‑spare: 1 на каждые 18 дисков.""")
 
 # Экспорт
