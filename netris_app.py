@@ -41,6 +41,53 @@ FILL_FACTOR = 0.77
 # Вспомогательные функции
 # ----------------------------
 
+def cpu_family_code(cpu_model: str) -> str:
+    """Код семейства CPU для имени: 5 – Xeon E, 7 – Xeon Silver."""
+    if "Silver" in cpu_model:
+        return "7"
+    # по умолчанию считаем E‑серией
+    return "5"
+
+
+def chassis_code(total_disks: int) -> str:
+    """Код корпуса по общему количеству дисков (включая hot‑spare).
+    1–12 → '2'; 13–16 → '3'; 17–24 → '4'; ≥25 → возвращаем пустую строку (нет корпуса)."""
+    if 1 <= total_disks <= 12:
+        return "2"
+    if 13 <= total_disks <= 16:
+        return "3"
+    if 17 <= total_disks <= 24:
+        return "4"
+    return ""  # нет подходящего корпуса
+
+
+def raid_short_code(raid_str: str) -> str:
+    if "RAID60" in raid_str:
+        return "R60"
+    if "RAID6" in raid_str:
+        return "R6"
+    if "RAID5" in raid_str:
+        return "R5"
+    if "RAID1" in raid_str:
+        return "R1"
+    return "R?"
+
+
+def build_server_name(cams: int, plan: Dict[str, Union[int, float, str]], chosen: Tier) -> str:
+    """Формирует имя по шаблону:
+    'Сервер LTV SR{chassis}{cpu}0-{cams}N-{usable}-R6-IR.{RAM}G.WI.CSI' (R6 — всегда, признак аппаратного контроллера)
+    Если дисков ≥25, возвращаем пустую строку — будем выводить предупреждение.
+    """
+    total_disks = int(plan.get("total_disks", 0))
+    ch = chassis_code(total_disks)
+    if not ch:
+        return ""
+    cpu_code = cpu_family_code(chosen.cpu_model)
+    usable_int = int(round(float(plan.get("usable_tb", 0.0))))
+    raid_code = "R6"  # всегда R6: признак аппаратного контроллера в имени
+    ram = int(chosen.ram_gb)
+    return f"Сервер LTV SR{ch}{cpu_code}0-{cams}N-{usable_int}-{raid_code}-IR.{ram}G.WI.CSI"
+
 def pick_tier(num_cams: int) -> Tier:
     for t in TIERS:
         if t.cam_range[0] <= num_cams <= t.cam_range[1]:
@@ -175,6 +222,14 @@ Hot‑spare: {plan['spares']} шт
 RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
 
 st.divider()
+
+# Имя сервера по правилам пользователя
+server_name = build_server_name(cams, plan, chosen)
+if server_name:
+    st.subheader("Наименование сервера")
+    st.code(server_name)
+else:
+    st.error("Невозможно сформировать имя: требуется корпус на более чем 24 диска.")
 
 st.caption("""Правила подбора CPU/RAM, подсистемы ОС и массива под архив жёстко соответствуют упрощённому ТЗ из чата.
 Для >16 дисков используется RAID60 (две группы RAID6) и добавляются hot‑spare: 1 на каждые 18 дисков.""")
