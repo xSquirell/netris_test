@@ -4,7 +4,7 @@ from typing import Tuple, List, Dict, Union
 
 import streamlit as st
 
-st.set_page_config(page_title="Конфигуратор видеосервера (упрощённое ТЗ)", layout="wide")
+st.set_page_config(page_title="Конфигуратор сервера «Безопасный регион»", layout="wide")
 
 # ----------------------------
 # Константы из упрощённого ТЗ
@@ -165,7 +165,7 @@ def plan_storage(required_effective_tb: float, disk_tb: float, fill_factor: floa
 # UI
 # ----------------------------
 
-st.title("Конфигуратор видеосервера по числу камер — упрощённое ТЗ")
+st.title("Конфигуратор сервера «Безопасный регион»")
 
 with st.sidebar:
     st.header("Ввод")
@@ -182,7 +182,7 @@ chosen = pick_tier(cams)
 plan = plan_storage(archive_effective_tb, disk_tb, FILL_FACTOR)
 
 # Вывод
-st.subheader("Итоговая конфигурация")
+st.subheader("Параметры:")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -231,26 +231,5 @@ if server_name:
 else:
     st.error("Невозможно сформировать имя: требуется корпус на более чем 24 диска.")
 
-st.caption("""Правила подбора CPU/RAM, подсистемы ОС и массива под архив жёстко соответствуют упрощённому ТЗ из чата.
-Для >16 дисков используется RAID60 (две группы RAID6) и добавляются hot‑spare: 1 на каждые 18 дисков.""")
 
-# Экспорт
-import json
-result = {
-    "cameras": cams,
-    "archive_tb_per_camera": ARCHIVE_TB_PER_CAMERA,
-    "required_archive_tb": archive_effective_tb,
-    "required_usable_tb": archive_effective_tb / FILL_FACTOR,
-    "fill_factor": FILL_FACTOR,
-    "disk_tb": disk_tb,
-    "server": {"cpu_model": chosen.cpu_model, "cores": chosen.cores_label, "ram_gb": chosen.ram_gb, "os": OS_NAME, "os_storage": OS_STORAGE_STR},
-    "storage_plan": plan,
-}
-
-st.download_button(
-    label="Скачать конфигурацию (JSON)",
-    data=json.dumps(result, ensure_ascii=False, indent=2).encode("utf-8"),
-    file_name="server_config.json",
-    mime="application/json",
-)
 
