@@ -189,7 +189,7 @@ with col1:
     st.markdown("**Сервер**")
     st.write(f"""CPU: {chosen.cpu_model}
 
-Ядра (по ТЗ): {chosen.cores_label}
+Ядра: {chosen.cores_label}
 
 RAM: {chosen.ram_gb} ГБ
 
