@@ -161,6 +161,8 @@ with col3:
 
 Hot‑spare: {plan['spares']} шт
 
+Схема RAID: {plan['raid']}
+
 Эффективная ёмкость (usable): {plan['usable_tb']:.2f} ТБ
 
 RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
