@@ -159,6 +159,8 @@ with col3:
     st.markdown("**Дисковый массив (под архив)**")
     st.write(f"""Диски: {disk_tb:.0f} ТБ × {plan['total_disks']} шт
 
+Hot‑spare: {plan['spares']} шт
+
 Эффективная ёмкость (usable): {plan['usable_tb']:.2f} ТБ
 
 RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
