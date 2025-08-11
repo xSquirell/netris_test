@@ -310,23 +310,29 @@ RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
 
 st.divider()
 
-# Имя сервера + цены
+# Имя сервера + цены в одном копируемом блоке
 server_name = build_server_name(cams, plan, chosen)
 prices = calc_prices(plan, chosen, disk_tb)
 
-if server_name:
-    st.subheader("Наименование сервера и цена")
-    st.code(server_name)
-else:
-    st.subheader("Наименование сервера и цена")
-    st.error("Невозможно сформировать имя: требуется корпус на более чем 24 диска.")
+st.subheader("Наименование сервера и цена")
 
-# Три цены: Вход, МРЦ, РРЦ
-st.markdown("**Цена (черновая):**")
-colp1, colp2, colp3 = st.columns(3)
-colp1.metric("Вход", fmt_rub(prices["in_price"]))
-colp2.metric("МРЦ (×1.35)", fmt_rub(prices["mpc"]))
-colp3.metric("РРЦ (×1.55)", fmt_rub(prices["rpc"]))
+if server_name:
+    copy_block = "\n".join([
+        f"{server_name}",
+        f"Вход: {fmt_rub(prices['in_price'])}",
+        f"МРЦ: {fmt_rub(prices['mpc'])}",
+        f"РРЦ: {fmt_rub(prices['rpc'])}",
+    ])
+    st.code(copy_block)
+else:
+    st.error("Невозможно сформировать имя: требуется корпус на более чем 24 диска.")
+    copy_block = "\n".join([
+        "Имя сервера не сформировано",
+        f"Вход: {fmt_rub(prices['in_price'])}",
+        f"МРЦ: {fmt_rub(prices['mpc'])}",
+        f"РРЦ: {fmt_rub(prices['rpc'])}",
+    ])
+    st.code(copy_block)
 
 # Примечание
 st.caption("Цены ориентировочные. Платформа выбирается по количеству дисков архива (включая hot‑spare).")
