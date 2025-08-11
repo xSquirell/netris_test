@@ -15,16 +15,17 @@ class Tier:
     cam_range: Tuple[int, int]
     cores_label: str  # строкой, как в ТЗ
     ram_gb: int
+    cpu_model: str
 
 TIERS: List[Tier] = [
-    Tier((1, 8),   "2–4 ядра", 8),
-    Tier((9, 16),  "4 ядра", 8),
-    Tier((17, 32), "4 ядра", 16),
-    Tier((33, 64), "6 ядер", 32),
-    Tier((65, 100),"8 ядер", 64),
-    Tier((101, 200),"10 ядер", 64),
-    Tier((201, 400),"12 ядер", 96),
-    Tier((401, 500),"14 ядер", 128),
+    Tier((1, 8),   "2–4 ядра", 8,   "Intel Xeon E-2314"),
+    Tier((9, 16),  "4 ядра",   8,   "Intel Xeon E-2314"),
+    Tier((17, 32), "4 ядра",   16,  "Intel Xeon E-2314"),
+    Tier((33, 64), "6 ядер",   32,  "Intel Xeon E-2336"),
+    Tier((65, 100),"8 ядер",   64,  "Intel Xeon E-2378"),
+    Tier((101, 200),"10 ядер", 64,  "Intel Xeon Silver 4310"),
+    Tier((201, 400),"12 ядер", 96,  "Intel Xeon Silver 4310"),
+    Tier((401, 500),"14 ядер", 128, "Intel Xeon Silver 4314"),
 ]
 
 # Диски под ОС: всегда 2×240 ГБ SSD в RAID1 (фиксировано по ТЗ)
@@ -56,7 +57,7 @@ def usable_and_level(n: int, disk_tb: float) -> Tuple[float, str]:
     Правила из упрощённого ТЗ:
       • 2 шт → RAID1
       • 3–6 → RAID5
-      • 7–16 → RAID6 ИЛИ 2×RAID5 в RAID0 (ёмкость идентична → (n-2)×disk)
+      • 7–16 → RAID6
       • >16 → две группы RAID6 в RAID0 → суммарно (n-4)×disk
     """
     if n < 2:
@@ -132,7 +133,9 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("**Сервер**")
-    st.write(f"""CPU: {chosen.cores_label}
+    st.write(f"""CPU: {chosen.cpu_model}
+
+Ядра (по ТЗ): {chosen.cores_label}
 
 RAM: {chosen.ram_gb} ГБ
 
@@ -154,21 +157,11 @@ with col2:
 
 with col3:
     st.markdown("**Дисковый массив (под архив)**")
-    st.write(f"""Диск: {disk_tb:.0f} ТБ
+    st.write(f"""Диски: {disk_tb:.0f} ТБ × {plan['total_disks']} шт
 
-Базовых дисков (data+parity): {plan['base_disks']}
+Эффективная ёмкость (usable): {plan['usable_tb']:.2f} ТБ
 
-Hot‑spare (для >16 дисков, 1 на 18): {plan['spares']}
-
-Всего физических дисков: {plan['total_disks']}
-
-Схема: {plan['raid']}
-
-Полезная ёмкость: {plan['usable_tb']:.2f} ТБ
-
-Требуемая полезная ёмкость (с учётом коэффициента): {plan['required_usable_tb']:.2f} ТБ
-
-Суммарная RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
+RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
 
 st.divider()
 
@@ -184,7 +177,7 @@ result = {
     "required_usable_tb": archive_effective_tb / FILL_FACTOR,
     "fill_factor": FILL_FACTOR,
     "disk_tb": disk_tb,
-    "server": {"cpu": chosen.cores_label, "ram_gb": chosen.ram_gb, "os": OS_NAME, "os_storage": OS_STORAGE_STR},
+    "server": {"cpu_model": chosen.cpu_model, "cores": chosen.cores_label, "ram_gb": chosen.ram_gb, "os": OS_NAME, "os_storage": OS_STORAGE_STR},
     "storage_plan": plan,
 }
 
