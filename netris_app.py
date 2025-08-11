@@ -38,7 +38,7 @@ ARCHIVE_TB_PER_CAMERA = 1.4
 FILL_FACTOR = 0.77
 
 # ----------------------------
-# Вспомогательные функции
+# Вспомогательные функции (имя сервера/RAID)
 # ----------------------------
 
 def cpu_family_code(cpu_model: str) -> str:
@@ -87,6 +87,7 @@ def build_server_name(cams: int, plan: Dict[str, Union[int, float, str]], chosen
     raid_code = "R6"  # всегда R6: признак аппаратного контроллера в имени
     ram = int(chosen.ram_gb)
     return f"Сервер LTV SR{ch}{cpu_code}0-{cams}N-{usable_int}-{raid_code}-IR.{ram}G.WI.CSI"
+
 
 def pick_tier(num_cams: int) -> Tier:
     for t in TIERS:
@@ -162,6 +163,92 @@ def plan_storage(required_effective_tb: float, disk_tb: float, fill_factor: floa
     return best
 
 # ----------------------------
+# Ценообразование (черновое)
+# ----------------------------
+
+PLATFORM_PRICE_BRACKETS = [
+    (1, 8, 81011),
+    (9, 12, 104381),
+    (13, 16, 141640),
+    (17, 24, 139535),
+]
+
+CPU_MB_PRICE = {
+    "Intel Xeon E-2314": 82047,
+    "Intel Xeon E-2336": 98533,
+    "Intel Xeon E-2378": 109420,
+    "Intel Xeon Silver 4310": 140338,
+}
+
+RAM_PRICE_PER_8GB = 3206
+OS_SSD_PRICE = 11312  # за 2×240 ГБ SSD
+OS_LICENSE_PRICE = 52800
+RAID_AND_CABLES_PRICE = 25000
+
+HDD_PRICE_PER_DISK = {
+    4.0: 1000,
+    6.0: 2000,
+    8.0: 3000,
+    10.0: 4000,
+    12.0: 5000,
+    14.0: 6000,
+    16.0: 25000,
+    18.0: 7000,
+    20.0: 8000,
+    22.0: 9000,
+}
+
+
+def fmt_rub(x: float) -> str:
+    return f"{int(round(x)):,}".replace(",", " ") + " ₽"
+
+
+def platform_price_by_disks(total_disks: int) -> int:
+    for lo, hi, price in PLATFORM_PRICE_BRACKETS:
+        if lo <= total_disks <= hi:
+            return price
+    # если больше 24 — считаем как 24+, платформы нет (будет 0), но не падаем
+    return 0
+
+
+def cpu_mb_price(cpu_model: str) -> int:
+    # Берём по точному совпадению, иначе 0
+    return CPU_MB_PRICE.get(cpu_model, 0)
+
+
+def ram_price_total(ram_gb: int) -> int:
+    modules_8gb = math.ceil(ram_gb / 8)
+    return modules_8gb * RAM_PRICE_PER_8GB
+
+
+def hdd_archive_price_total(disk_tb: float, total_disks: int) -> int:
+    per = HDD_PRICE_PER_DISK.get(float(disk_tb), 0)
+    return per * int(total_disks)
+
+
+def calc_prices(plan: Dict[str, Union[int, float, str]], chosen: Tier, disk_tb: float) -> Dict[str, int]:
+    total_disks = int(plan.get("total_disks", 0))
+
+    parts = {
+        "platform": platform_price_by_disks(total_disks),
+        "cpu_mb": cpu_mb_price(chosen.cpu_model),
+        "ram": ram_price_total(chosen.ram_gb),
+        "os_ssd": OS_SSD_PRICE,
+        "hdd_archive": hdd_archive_price_total(disk_tb, total_disks),
+        "os_license": OS_LICENSE_PRICE,
+        "raid_bundle": RAID_AND_CABLES_PRICE,
+    }
+
+    base_sum = sum(parts.values())
+
+    return {
+        "in_price": base_sum,
+        "mpc": int(round(base_sum * 1.35)),
+        "rpc": int(round(base_sum * 1.55)),
+        "breakdown": parts,  # можно вывести при необходимости
+    }
+
+# ----------------------------
 # UI
 # ----------------------------
 
@@ -223,13 +310,23 @@ RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
 
 st.divider()
 
-# Имя сервера по правилам пользователя
+# Имя сервера + цены
 server_name = build_server_name(cams, plan, chosen)
+prices = calc_prices(plan, chosen, disk_tb)
+
 if server_name:
-    st.subheader("Наименование сервера")
+    st.subheader("Наименование сервера и цена")
     st.code(server_name)
 else:
+    st.subheader("Наименование сервера и цена")
     st.error("Невозможно сформировать имя: требуется корпус на более чем 24 диска.")
 
+# Три цены: Вход, МРЦ, РРЦ
+st.markdown("**Цена (черновая):**")
+colp1, colp2, colp3 = st.columns(3)
+colp1.metric("Вход", fmt_rub(prices["in_price"]))
+colp2.metric("МРЦ (×1.35)", fmt_rub(prices["mpc"]))
+colp3.metric("РРЦ (×1.55)", fmt_rub(prices["rpc"]))
 
-
+# Примечание
+st.caption("Цены ориентировочные. Платформа выбирается по количеству дисков архива (включая hot‑spare).")
