@@ -248,8 +248,8 @@ def calc_prices(plan: Dict[str, Union[int, float, str]], chosen: Tier, disk_tb: 
 
     return {
         "in_price": total_sum,
-        "mpc": int(round(total_sum * 1.35)),
-        "rpc": int(round(total_sum * 1.55)),
+        "mpc": int(round(total_sum * 1.53)),
+        "rpc": int(round(total_sum * 2)),
         "breakdown": parts,
     }
 
