@@ -185,6 +185,8 @@ OS_SSD_PRICE = 11312  # за 2×240 ГБ SSD
 OS_LICENSE_PRICE = 52800
 RAID_AND_CABLES_PRICE = 25000
 
+CAMERA_PRICE_PER_CAMERA = 5808
+
 HDD_PRICE_PER_DISK = {
     4.0: 1000,
     6.0: 2000,
@@ -226,7 +228,7 @@ def hdd_archive_price_total(disk_tb: float, total_disks: int) -> int:
     return per * int(total_disks)
 
 
-def calc_prices(plan: Dict[str, Union[int, float, str]], chosen: Tier, disk_tb: float) -> Dict[str, int]:
+def calc_prices(plan: Dict[str, Union[int, float, str]], chosen: Tier, disk_tb: float, cams: int) -> Dict[str, int]:
     total_disks = int(plan.get("total_disks", 0))
 
     parts = {
@@ -237,15 +239,19 @@ def calc_prices(plan: Dict[str, Union[int, float, str]], chosen: Tier, disk_tb: 
         "hdd_archive": hdd_archive_price_total(disk_tb, total_disks),
         "os_license": OS_LICENSE_PRICE,
         "raid_bundle": RAID_AND_CABLES_PRICE,
+        # Камеры считаем отдельно и прибавляем только к «входу»
+        "cameras": cams * CAMERA_PRICE_PER_CAMERA,
     }
 
-    base_sum = sum(parts.values())
+    # База для МРЦ/РРЦ — без камер, по запросу можно изменить
+    base_sum = sum(v for k, v in parts.items() if k != "cameras")
+    cams_cost = parts["cameras"]
 
     return {
-        "in_price": base_sum,
+        "in_price": base_sum + cams_cost,
         "mpc": int(round(base_sum * 1.35)),
         "rpc": int(round(base_sum * 1.55)),
-        "breakdown": parts,  # можно вывести при необходимости
+        "breakdown": parts,
     }
 
 # ----------------------------
@@ -312,7 +318,7 @@ st.divider()
 
 # Имя сервера + цены в одном копируемом блоке
 server_name = build_server_name(cams, plan, chosen)
-prices = calc_prices(plan, chosen, disk_tb)
+prices = calc_prices(plan, chosen, disk_tb, cams)
 
 st.subheader("Наименование сервера и цена")
 
@@ -335,4 +341,4 @@ else:
     st.code(copy_block)
 
 # Примечание
-st.caption("Цены ориентировочные. Платформа выбирается по количеству дисков архива (включая hot‑spare).")
+st.caption("Цены ориентировочные. Платформа выбирается по количеству дисков архива (включая hot‑spare). «Вход» включает стоимость камер (5808 ₽/шт).")
