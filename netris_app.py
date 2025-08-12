@@ -183,7 +183,7 @@ CPU_MB_PRICE = {
 RAM_PRICE_PER_8GB = 3206
 OS_SSD_PRICE = 11312  # за 2×240 ГБ SSD
 OS_LICENSE_PRICE = 52800
-RAID_AND_CABLES_PRICE = 25000
+RAID_AND_CABLES_PRICE = 26000
 
 CAMERA_PRICE_PER_CAMERA = 5808
 
@@ -287,7 +287,7 @@ RAM: {chosen.ram_gb} ГБ
 
 ОС: {OS_NAME}
 
-Подсистема ОС: {OS_STORAGE_STR}""")
+SSD: {OS_STORAGE_STR}""")
 
 with col2:
     st.markdown("**Хранилище видеоархива**")
@@ -295,7 +295,7 @@ with col2:
 
 Камер: {cams}
 
-Итого требуемо: {archive_effective_tb:.2f} ТБ
+Итого требуется: {archive_effective_tb:.2f} ТБ
 
 Коэффициент заполнения массива (не более): {FILL_FACTOR:.2f}
 
@@ -309,9 +309,9 @@ Hot‑spare: {plan['spares']} шт
 
 Схема RAID: {plan['raid']}
 
-Эффективная ёмкость (usable): {plan['usable_tb']:.2f} ТБ
+Эффективная емкость: {plan['usable_tb']:.2f} ТБ
 
-RAW-ёмкость: {plan['raw_tb']:.2f} ТБ""")
+RAW-емкость: {plan['raw_tb']:.2f} ТБ""")
 
 st.divider()
 
