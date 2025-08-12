@@ -239,18 +239,17 @@ def calc_prices(plan: Dict[str, Union[int, float, str]], chosen: Tier, disk_tb: 
         "hdd_archive": hdd_archive_price_total(disk_tb, total_disks),
         "os_license": OS_LICENSE_PRICE,
         "raid_bundle": RAID_AND_CABLES_PRICE,
-        # Камеры считаем отдельно и прибавляем только к «входу»
         "cameras": cams * CAMERA_PRICE_PER_CAMERA,
     }
 
-    # База для МРЦ/РРЦ — без камер, по запросу можно изменить
-    base_sum = sum(v for k, v in parts.items() if k != "cameras")
+    core_sum = sum(v for k, v in parts.items() if k != "cameras")
     cams_cost = parts["cameras"]
+    total_sum = core_sum + cams_cost
 
     return {
-        "in_price": base_sum + cams_cost,
-        "mpc": int(round(base_sum * 1.35)),
-        "rpc": int(round(base_sum * 1.55)),
+        "in_price": total_sum,
+        "mpc": int(round(total_sum * 1.35)),
+        "rpc": int(round(total_sum * 1.55)),
         "breakdown": parts,
     }
 
@@ -341,4 +340,4 @@ else:
     st.code(copy_block)
 
 # Примечание
-st.caption("Цены ориентировочные. Платформа выбирается по количеству дисков архива (включая hot‑spare). «Вход» включает стоимость камер (5808 ₽/шт).")
+st.caption("Цены ориентировочные. Платформа выбирается по количеству дисков архива (включая hot‑spare). «Вход», «МРЦ» и «РРЦ» включают стоимость камер (5808 ₽/шт).")
