@@ -279,7 +279,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("**Сервер**")
-    st.write(f"""CPU: {chosen.cpu_model}
+    st.write(f"""CPU: {("Intel Xeon Silver" if "Silver" in chosen.cpu_model else "Intel Xeon E")}
 
 Ядра: {chosen.cores_label}
 
@@ -322,22 +322,21 @@ prices = calc_prices(plan, chosen, disk_tb, cams)
 st.subheader("Наименование сервера и цена")
 
 if server_name:
-    copy_block = "\n".join([
+    copy_block = "
+".join([
         f"{server_name}",
-        f"Вход: {fmt_rub(prices['in_price'])}",
         f"МРЦ: {fmt_rub(prices['mpc'])}",
         f"РРЦ: {fmt_rub(prices['rpc'])}",
     ])
     st.code(copy_block)
 else:
     st.error("Невозможно сконфигурировать сервер: требуется корпус на более чем 24 диска.")
-    copy_block = "\n".join([
+    copy_block = "
+".join([
         "Имя сервера не сформировано",
-        f"Вход: {fmt_rub(prices['in_price'])}",
         f"МРЦ: {fmt_rub(prices['mpc'])}",
         f"РРЦ: {fmt_rub(prices['rpc'])}",
     ])
     st.code(copy_block)
 
 # Примечание
-
