@@ -322,8 +322,7 @@ prices = calc_prices(plan, chosen, disk_tb, cams)
 st.subheader("Наименование сервера и цена")
 
 if server_name:
-    copy_block = "
-".join([
+    copy_block = "\n".join([
         f"{server_name}",
         f"МРЦ: {fmt_rub(prices['mpc'])}",
         f"РРЦ: {fmt_rub(prices['rpc'])}",
@@ -331,12 +330,12 @@ if server_name:
     st.code(copy_block)
 else:
     st.error("Невозможно сконфигурировать сервер: требуется корпус на более чем 24 диска.")
-    copy_block = "
-".join([
+    copy_block = "\n".join([
         "Имя сервера не сформировано",
         f"МРЦ: {fmt_rub(prices['mpc'])}",
         f"РРЦ: {fmt_rub(prices['rpc'])}",
     ])
     st.code(copy_block)
+
 
 # Примечание
